@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <script src='main.js'></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales', 'Expenses'],
+          ['2004',  1000,      400],
+          ['2005',  1170,      460],
+          ['2006',  660,       1120],
+          ['2007',  1030,      540]
+        ]);
+
+        var options = {
+          title: 'Company Performance',
+          curveType: 'function',
+          legend: { position: 'bottom' }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+</head>
+<body>
+    
+
+    <script>
+
+        let word_array
+        const url = "http://192.168.50.47:5000/co2/Raum2"
+        fetch(url).then(response => response.json())
+        .then(function(data){
+            word_array = csv2json(data['csv'],delimiter=',');
+            console.log(typeof(word_array));
+        })
+        .catch(function(error){
+            console.log(error);
+        });
+
+        const csv2json = (str, delimiter = ',') => {
+            const titles = str.slice(0, str.indexOf('\n')).split(delimiter);
+            const rows = str.slice(str.indexOf('\n') + 1).split('\n');
+            return rows.map(row => {
+                const values = row.split(delimiter);
+                return titles.reduce((object, curr, i) => (object[curr] = values[i], object), {})
+            });
+        };
+
+
+         
+
+    </script>
+</body>
+</html>
