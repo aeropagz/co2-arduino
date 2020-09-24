@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS
-import csv, os
+import csv, os, datetime, json
 
 BASE_PATH = path = os.path.dirname(__file__)
 
@@ -10,7 +10,6 @@ cors = CORS(app, resources = {r"/co2/*":{"origins": "*"}})
 api = Api(app)
 
 data_post_args = reqparse.RequestParser()
-data_post_args.add_argument("time", type=str)
 data_post_args.add_argument("value", type=int)
 
 def check_if_id_exists(id):
@@ -39,14 +38,26 @@ class MeasuredValue(Resource):
     def post(self,id):
         args = data_post_args.parse_args()
         check_if_id_exists(id)
+        now = datetime.datetime.today().isoformat("T")
         with open(BASE_PATH + "/data/" + id + ".csv", mode='a', newline='') as csv_file:
             writer = csv.writer(csv_file)
-            writer.writerow([args['time'], args['value']])
+            writer.writerow([now, args['value']])
 
         return '', 201
+class AvaiableSensors(Resource):
+    def get(self):
+        f = []
+        for (_, _, filenames) in os.walk(BASE_PATH+"/data/"):
+            f.extend(filenames)
+            break
+        for i in range(0,len(f)):
+            f[i] = f[i].split('.')[0]
+        names_of_sensors = {"names":f}
+        return names_of_sensors
+
 
 api.add_resource(MeasuredValue, "/co2/<string:id>")
-
+api.add_resource(AvaiableSensors, "/co2/overview")
 if __name__ =="__main__":
     app.run(host='0.0.0.0', debug=True)
 
