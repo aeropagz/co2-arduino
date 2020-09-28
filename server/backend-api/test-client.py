@@ -1,6 +1,6 @@
 import requests, random
 
-URL = "http://127.0.0.1:5000/co2/Raum3"
+URL = "http://127.0.0.1:5000/co2/Raum16"
 
 def randomData():
     value = random.randint(0, 1800)
