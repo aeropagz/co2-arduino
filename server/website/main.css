@@ -1,26 +1,7 @@
 body {
   font-family: Helvetica, Arial, Sans-Serif;
 }
-.SectionHeader-logo{
-  width: 130px;
-  height: 40px;
-}
-.logo{
-  background-color: white;
-  width: 150px;
-  height: 50px;
-  margin-left: 30px;
-  padding: 10px 0px 0px 10px;
-  border-radius: 4px;
-  
-}
-.navbar{
-  background-color: darkred;
-  width: 99%;
-  height: 60px;
-  padding: 10px 10px 10px 10px;
-  border-radius: 4px;
-}
+
 .container{
   display: flex;
   flex-direction: row;
