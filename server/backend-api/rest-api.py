@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_restful import Api, Resource, reqparse, fields, marshal_with
+from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import csv, os, datetime, json
@@ -14,15 +14,17 @@ db = SQLAlchemy(app)
 cors = CORS(app, resources = {r"/co2/*":{"origins": "*"}})
 
 class WeatherModel(db.Model):
+    __tablename__ = 'weather_data'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
     temperature = db.Column(db.Integer, nullable=False)
     pressure = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
-        return f"Weather(name: {name}, temperature: {temperature}, pressure: {pressure}"
+        return f"Weather(name: {name}, temperature: {temperature}, pressure: {pressure}, timestamp: {timestamp})"
 
-#db.create_all()
+db.create_all()
 
 data_post_args = reqparse.RequestParser()
 
@@ -30,41 +32,36 @@ data_post_args.add_argument("temp", type=float)
 data_post_args.add_argument("pressure", type=float)
 
 resource_fields = {
-    'id': fields.Integer,
+    'id': fields.String,
     'name': fields.String,
     'temperature': fields.Float,
-    'pressure':fields.Float
+    'pressure':fields.Float,
+    'timestamp':fields.String
 }
 
 
 
 class MeasuredValue(Resource):
-    def get(self, id):
-  
-        return {"csv": csv}
+    @marshal_with(resource_fields)
+    def get(self, sensor_id):
+        result = WeatherModel.query.filter_by(name=sensor_id).all()
+        return result
 
-
-    def post(self,id):
+    @marshal_with(resource_fields)
+    def put(self,sensor_id):
         args = data_post_args.parse_args()
         now = datetime.datetime.today().isoformat("T")
-        with open("./data/" + id + ".csv", mode='a', newline='') as csv_file:
-            writer = csv.writer(csv_file)
-            writer.writerow([now, args['value']])
+        weather_data = WeatherModel(name=sensor_id, temperature=args['temp'], pressure=args["pressure"], timestamp=now)
+        db.session.add(weather_data)
+        db.session.commit()
+        return weather_data, 201
 
-        return '', 201
 class AvaiableSensors(Resource):
     def get(self):
-        files = []
-        for (_, _, filenames) in os.walk("./data/"):
-            files.extend(filenames)
-            break
-        for i in range(0,len(files)):
-            files[i] = files[i].split('.')[0]
-        names_of_sensors = {"names":files}
-        return names_of_sensors
+        result = WeatherModel.query.with_entities(WeatherModel.name)
+        return result
 
-
-api.add_resource(MeasuredValue, "/co2/<string:id>")
+api.add_resource(MeasuredValue, "/co2/<string:sensor_id>")
 api.add_resource(AvaiableSensors, "/co2/overview")
 if __name__ =="__main__":
     app.run(host='0.0.0.0', debug=True)
